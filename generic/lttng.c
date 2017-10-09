@@ -13,9 +13,55 @@
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLEXPORT
 
+#ifdef HAVE_TCL_INFOFRAME
+extern Tcl_Obj * Tcl_InfoFrame(Tcl_Interp *);
+#endif
+
+static void GetFrameInfoFromDict(
+		Tcl_Interp *interp,
+		Tcl_Obj *info,
+		char **args,
+		int *argsi)
+{
+	static Tcl_Obj *keys[10] = { NULL };
+	Tcl_Obj **k = keys, *val;
+	int i = 0;
+
+	if (!*k) {
+#define kini(s) keys[i] = Tcl_NewStringObj(s, strlen(s)); i++
+		kini("cmd");    kini("type");   kini("proc");   kini("file");
+		kini("method"); kini("class");  kini("lambda"); kini("object");
+		kini("line");   kini("level");
+#undef kini
+	}
+	for (i = 0; i < 6; i++) {
+		Tcl_DictObjGet(interp, info, *k++, &val);
+		args[i] = val ? Tcl_GetString(val) : NULL;
+	}
+	/* no "proc" -> use "lambda" */
+	if (!args[2]) {
+		Tcl_DictObjGet(interp, info, *k, &val);
+		args[2] = val ? Tcl_GetString(val) : NULL;
+	}
+	k++;
+	/* no "class" -> use "object" */
+	if (!args[5]) {
+		Tcl_DictObjGet(interp, info, *k, &val);
+		args[5] = val ? Tcl_GetString(val) : NULL;
+	}
+	k++;
+	for (i = 0; i < 2; i++) {
+		Tcl_DictObjGet(interp, info, *k++, &val);
+		if (val) {
+			Tcl_GetIntFromObj(interp, val, &argsi[i]);
+		} else {
+			argsi[i] = 0;
+		}
+	}
+}
+
 /*
  * Callback for Tcl's cmdtrace.
- *
  */
 void tcllttng_callback(ClientData clientData,
 		Tcl_Interp *interp,     /* Current interpreter. */
@@ -28,6 +74,30 @@ void tcllttng_callback(ClientData clientData,
 		const char *argv[])     /* Argument strings. */
 {
 	tracepoint(tcl, tcl_cmdtrace, level, command);
+
+#ifdef HAVE_TCL_INFOFRAME
+	Tcl_Obj *info = Tcl_InfoFrame(interp);
+	if (info) {
+		char no_string = 0;
+		char *a[6]; int i[2];
+		GetFrameInfoFromDict(interp, info, a, i);
+
+		char *infoCmd = (a[0] ? a[0] : &no_string);
+		char *infoType = (a[1] ? a[1] : &no_string);
+		char *infoProcOrLambda = (a[2] ? a[2] : &no_string);
+		char *infoFile = (a[3] ? a[3] : &no_string);
+		char *infoMethod = (a[4] ? a[4] : &no_string);
+		char *infoClassOrObject = (a[5] ? a[5] : &no_string);
+		int infoLine = i[0];
+		int infoLevel = i[1];
+
+		tracepoint(tcl, tcl_linetrace, infoLevel, infoLine, infoFile);
+		tracepoint(tcl, tcl_infotrace, infoLevel, infoLine, infoFile,
+				infoCmd, infoType, infoProcOrLambda, infoMethod, infoClassOrObject);
+
+		Tcl_DecrRefCount(info);
+	}
+#endif
 }
 
 typedef struct tcllttng_objectClientData {
@@ -49,7 +119,6 @@ static int tcllttngObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 
 	return TCL_OK;
 }
-
 
 /*
  *----------------------------------------------------------------------
