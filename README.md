@@ -54,3 +54,14 @@ tcl:tcl_cmdtrace   TCL level and cmd passed to the Tcl_CreateTrace callback
 tcl:tcl_linetrace  TCL level, file and line number if available
 tcl:tcl_infotrace  TCL "info frame" information
 ```
+
+## Using barectf
+
+In platforms where LTTng does not work, you can generate traces with barectf.
+
+https://github.com/efficios/barectf
+
+The barectf implementation in TCL lttng uses the linux-fs demo platform implementation.  You will need to install barectf.
+You will also need the source code from git to inline compile the provider.
+The makefile named Makefile.barectf provides an outline of how to build using barectf.
+Remember that the C code from barectf is portable. You can copy the generated source files from one platform to another and compile.  Just copy the git barectf files also.

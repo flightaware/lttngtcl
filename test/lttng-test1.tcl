@@ -16,7 +16,11 @@
 # lttng destroy 
 # babeltrace ~/lttng-traces/my-user-space-session-*
 #
-package require lttngtcl 0.1.0
+
+
+#package require lttngtcl 0.1.0
+
+load "./liblttngtcl0.2.0.so"
 
 ::lttng::cmdtrace
 
@@ -27,3 +31,5 @@ gets stdin
 puts "two"
 gets stdin
 puts "goodbye"
+
+rename ::lttng::cmdtrace ""

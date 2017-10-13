@@ -7,15 +7,29 @@
 
 #include <tcl.h>
 #include <string.h>
+#include <stdlib.h>
 
+#ifdef USE_BARECTF
+/* add the barectf linux FS platform to write files */
+#include "doc/examples/barectf-tracepoint/barectf-tracepoint-linux-fs.h"
+#include "platforms/linux-fs/barectf-platform-linux-fs.c"
+/* include the generated source from 
+ *    barectf -m metadata config.yaml
+ */
+#include "../barectf.h"
+#include "../barectf-bitfield.h"
+#include "../barectf.c"
+#endif
+
+#ifndef USE_BARECTF
 #include "tcl-tp.h"
+#endif
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLEXPORT
 
 #ifdef HAVE_TCL_INFOFRAME
 extern Tcl_Obj * Tcl_InfoFrame(Tcl_Interp *);
-#endif
 
 static void GetFrameInfoFromDict(
 		Tcl_Interp *interp,
@@ -59,6 +73,7 @@ static void GetFrameInfoFromDict(
 		}
 	}
 }
+#endif
 
 /*
  * Callback for Tcl's cmdtrace.
@@ -113,6 +128,10 @@ typedef struct tcllttng_objectClientData {
 
 static void tcllttng_CmdDeleteProc(ClientData clientData)
 {
+#ifdef USE_BARECTF
+	fini_tracing();
+#endif
+
 	if (clientData != NULL) {
 		ckfree(clientData);
 	}
@@ -177,6 +196,10 @@ Lttngtcl_Init(Tcl_Interp *interp)
 			(ClientData)data, (Tcl_CmdDeleteProc *)tcllttng_CmdDeleteProc);
 
 	Tcl_Export (interp, namespace, "*", 0);
+
+#ifdef USE_BARECTF
+	init_tracing();
+#endif
 
 	return TCL_OK;
 }

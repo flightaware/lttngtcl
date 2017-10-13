@@ -98,7 +98,7 @@ TEA_ADD_LIBS([-llttng-ust])
 #
 # TEA_ADD_* any platform specific compiler/build info here.
 #--------------------------------------------------------------------
-#CLEANFILES=""
+CLEANFILES="barectf-bitfield.h barectf.c barectf.h"
 if test "${TEA_PLATFORM}" = "windows" ; then
     AC_DEFINE(BUILD_tclspline, 1, [Build windows export dll])
     CLEANFILES="$CLEANFILES *.lib *.dll *.exp *.ilk *.pdb vc*.pch"

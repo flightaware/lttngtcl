@@ -55,4 +55,9 @@ config.log
 config.status
 autom4te.cache/
 Makefile
+pkgIndex.trectf-bitfield.h
+barectf.c
+barectf.h
+ctf-linux-fs/
 pkgIndex.tcl
+barectf-bitfield.h

@@ -1,0 +1,22 @@
+#
+# Building LTTng TCL with barectf.
+#
+# git clone https://github.com/efficios/barectf
+#
+# Install barectf. Either use the pip installer or install from git clone.
+#
+# You will need both the python based code generator and files from the samples.
+#
+#
+BARECTF_HOME = $HOME/git/barectf
+
+all:
+	@echo "Creating default trace directory"
+	mkdir -p ctf-linux-fs
+	@echo "Generating code"
+	barectf -m ctf-linux-fs bare-ctf-config.yaml
+	@if [! -f barectf.c]; then echo barectf failed to generate barectf.c; exit 1; fi
+	@echo "reconfigure TCL extension to compile in barectf implementation"
+	env CFLAGS="-DUSE_BARECTF -I$(BARECTF_HOME) -I$(BARECTF_HOME)/platforms/linux-fs -I$(BARECTF_HOME)/extra -I." ./configure
+	make -f Makefile clean
+	make -f Makefile
