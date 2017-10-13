@@ -73,7 +73,10 @@ void tcllttng_callback(ClientData clientData,
 		int argc,               /* Number of arguments. */
 		const char *argv[])     /* Argument strings. */
 {
-	tracepoint(tcl, tcl_cmdtrace, level, command);
+	char short_cmd[64];
+	strncpy(short_cmd, command, sizeof(short_cmd) - 2);
+	short_cmd[sizeof(short_cmd) - 1] = 0;
+	tracepoint(tcl, tcl_cmdtrace, level, short_cmd);
 
 #ifdef HAVE_TCL_INFOFRAME
 	Tcl_Obj *info = Tcl_InfoFrame(interp);
@@ -92,8 +95,10 @@ void tcllttng_callback(ClientData clientData,
 		int infoLevel = i[1];
 
 		tracepoint(tcl, tcl_linetrace, infoLevel, infoLine, infoFile);
+		strncpy(short_cmd, infoCmd, sizeof(short_cmd) - 2);
+		short_cmd[sizeof(short_cmd) - 1] = 0;
 		tracepoint(tcl, tcl_infotrace, infoLevel, infoLine, infoFile,
-				infoCmd, infoType, infoProcOrLambda, infoMethod, infoClassOrObject);
+				short_cmd, infoType, infoProcOrLambda, infoMethod, infoClassOrObject);
 
 		Tcl_DecrRefCount(info);
 	}
