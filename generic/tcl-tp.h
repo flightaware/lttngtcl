@@ -22,6 +22,7 @@ TRACEPOINT_EVENT(
     )
 )
 
+#ifdef HAVE_TCL_INFOFRAME
 TRACEPOINT_EVENT(
     tcl,
     tcl_linetrace,
@@ -61,6 +62,7 @@ TRACEPOINT_EVENT(
         ctf_string(class_or_object_field, class_or_object_arg)
     )
 )
+#endif /* HAVE_TCL_INFOFRAME */
 
 #endif /* _TCL_TP_H */
 
